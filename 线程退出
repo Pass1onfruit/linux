@@ -1,0 +1,22 @@
+线程终止（线程退出）：
+1,线程将自己的入口函数运行完毕return退出, (main中return退出的是进程)
+2, void pthread_exit(void *retval)退出调用线程
+3, void pthread_cancel(pthread_t tid);取消一个指定线程
+线程退出也不会完全释放资源,需要被其它线程等待
+线程等待: 等待一个指定的线程退出,获取这个退出线程的返回值,并且回收资源
+int pthread_join(pthread_t tid, void **retval);
+test(char **val)
+{
+char *ptr = "....";
+*val = ptr;
+}
+
+一个线程创建出来,默认在退出时是不会释放所有资源的,这是因为线程有一个属性--joinable
+处于这个joinable状态的线程,退出后不会自动释放资源,需要被等待，得到返回值
+如果不是joinable属性则不需要被等待，退出时会自己释放，的不到返回值则没必要等待了。
+
+线程分离：将线程的属性从joinable设置为detach,表示分离一个线程,
+被分离,处于detach属性的线程退出后,则会自动释放所有资源(没有返回值，被分离的线程没必要被等待)
+int pthread_detach(pthread t tid);
+
+pthread_t pthread_self(void);//分离自己，返回调用线程的pid
