@@ -1,0 +1,16 @@
+线程创建：
+int pthread_create(pthread_t *tid,   //无符号长整形，向用户返回一个线程id
+pthread_attr *attr,   //一个线程属性参数（一般置空）
+void *(*start_routine)(void*),   //传入一个入口函数
+void *arg)   //传递给线程入口函数的参数
+{
+start_routine(arg);
+}
+
+用户态线程通过pcb完成调度
+每个线程都有自己的栈区，在共享区中（栈区堆区之间）
+相对独立的地址空间：线程地址空间 （tid就是它的首地址，操作句柄）
+含有用户态线程的描述信息 等
+pcb->pid：轻量级的进程ID（一个进程一个pid）
+pcb->tgid：进程ID-值默认等于主线程的pid
+ps -L：查看轻量级进程信息
