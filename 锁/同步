@@ -1,0 +1,16 @@
+同步：
+同步的实现:条件变量
+条件变量提供了让一个线程等待与唤醒的功能
+
+pthread_cond_t条件变量类型
+ pthread_condattr_t属性变量（通常置空）
+pthread_cond_init (pthread_cond_t *cond, pthread_condattr_t *attr;  //初始化条件变量
+pthread_cond_wait(pthread_cond t*cond, pthread-mutext *mutex);  //让一个线程阻塞,将PCB加入条件变量的阻塞队列 //包含了两部操作 解锁 使线程休眠
+pthread_cond_signal(pthread_cond_t *cond),  //通过条件变量唤醒等待队列上等待的线程，并上锁
+pthread_cond_destroy(pthread_cond_t *cond);
+
+比如吃饭，先要看“有没有饭” ，
+如果有饭，可以进到下一步“吃饭”，
+如果没有饭，则变为阻塞状态，调用pthread_cond_wait进行等待，解锁，进到条件变量的等待队列
+用pthread_cond_signal唤醒条件变量上等待的线程
+唤醒，加锁，“吃饭”
