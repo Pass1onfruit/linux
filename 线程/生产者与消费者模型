@@ -1,0 +1,65 @@
+生产者与消费者模型
+
+生产者生产数据，消费者处理数据，但是生产和消费的数据不一定一致，如果数据生产数据过快，就只能等待消费者分析好数据再生产数据，或者直接把数据丢掉
+比如一个线程对数据流量进行分析，流量速度是不可变的，分析（消费者处理）得慢把抓包（数据生产）放慢就会丢包，数据抓取不完全
+加一个缓冲区在生产者和消费者之间，线程安全队列，就是生产者与消费者模型
+1.支持忙闲不均
+2.支持并发（如多个消费者取数据，但是要注意线程安全）
+3.解耦合（让两个模块关联性更小）
+
+一个场所,两类角色,三种关系
+生产者与生产者应该具备互斥关系
+消费者与消费者之间应该具备互斥关系
+生产者与消费者之间应该具备同步+互斥
+
+class BlockQueue 
+{
+private:
+std:queue<int> _queue;//动态增长的队列
+int _capacity;  //最大容量
+//保证线程安全
+pthread_cond_t _cond_productor; //生产者等待队列
+pthread_cond_t_cond_consumer; //消费者等待队列
+pthread_mutex t_mutex;  //实现互斥
+
+public:
+BlockQueue()
+{
+pthread_mutex_init(&_mutex, NULL);
+pthread cond init(&_cond_consumer, NULL);
+pthread condinit(&_cond_productor, NULL);
+}
+~BlockQueue()
+{
+pthread_mutex_destroy (&_mutex);
+pthread_cond_destroy (&_cond_consumer);
+pthread_cond_destroy(&_cond_productor);
+}
+bool QueuePush(int &data)  //提供给生产者的接口，数据入队
+{
+pthread_mutex_lock(&_mutex);  //_queue是临界资源需要加锁保护
+while (_queue.size() ==_capacity) //然后判断队列节点是否满了
+{
+//满了则等待（循环等待，支持并发，防止其他生产者又去生产）
+pthread_cond_wait(&_cond_productor, &_mutex);
+}
+_queue.push(data);
+pthread mutex unlock(& mutex); //数据入队完毕，完成临界区保护，解锁
+pthread_cond_signal(&_cond_consumer); //通知消费者
+return true;
+}
+
+bool QueuePop(int &data)  //提供给消费者的接口，数据出队，获取数据
+{
+pthread_mutex_lock(&_mutex);  //同样加锁保护
+while (_queue.empty()) //为空则等待
+{ 
+pthread_cond_wait(&_cond_consumer, &_mutex);
+} 
+data _queue.front();
+_queue. pop();
+pthread_mutex_unlock(& mutex); //同样临界操作结束后解锁
+pthread_cond_signal(& cond_productor);
+return ture;
+}
+}
