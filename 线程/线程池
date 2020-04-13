@@ -1,0 +1,126 @@
+线程池的实现:
+应用场景:
+t=t1(线程创建的时间) + t2 (任务处理的实现) +t3 (线程销毁的时间)
+t1+t3  /  t
+若大量的任务处理总耗时中线程的创建于销毁占用的大量的比例,就意味着资源,性能的浪费在大量请求的峰值压力下, 若每个请求都创建一个线程,则有可能资源耗尽程序崩溃
+线程池:
+提前创建一堆线程(最大数量限制) ,以及一个线程安全的任务队列,当大量的请求到来后,被添加到任务队列中,而线程池中的线程在不断从任务队列中获取任务进行处理即可
+
+作用:1,避免大量线程的频繁创建与销毁所带来的时间成本
+2.避免峰值压力下的线程创建过多导致资源耗尽的风险
+实现:
+一个以上的线程+线程安全的任务队列
+使用C++封装一个线程池类(固定数量线程的线程池) ,向外提供简单的线程池操作接口
+1,固定数量的线程 数量限制+初始化接口--创建线程
+2线程安全的任务队列
+
+//任务类
+typedef void (*TaskHandler)(int data);
+class ThreadTask 
+{
+private:
+int data;
+TaskHandler handler;
+public: 
+ThreadTask(){}
+ThreadTask(int data, TaskHandler handler):_data(data),
+handler (handler) {}
+void SetTask(int data, TaskHandler handler) 
+{
+_data = data;
+_handler = handler;
+}
+void Run() 
+{
+handler(_data);
+}
+//每个任务都由用户自己传入数据和决定如何处理
+
+#define MAX_THR 5；
+class ThreadPool
+{ 
+private:
+int thr_num;//线程池中线程的最大数量
+std::queue task-queue;//队列
+pthread_mutext_mutex;//保护队列安全操作
+pthread_condt_cond_con;//实现队列的同步操作-消费者
+pthread_cond_t_cond_pro;//实现队列的同步操作-生产者
+private:
+static void *thr_start(void *arg)//加static无法访问到私有成员,需使用公有接口
+{
+ThreadPool *pool = (ThreadPool*)arg;
+while(1) 
+{ 
+pool->ThreadLock();
+pthread_mutex_lock(&mutex);
+while(pool->TaskIsEmpty() ) 
+{ 
+pool->ThreadWait();
+} 
+ThreadTask tt;
+pool->QueuePop(tt);
+pool->ThreadUnLock();//解锁，不需要通知消费者
+tt.Run();
+}
+return NULL;
+}
+//提供公有接口
+public:
+bool QueuePop(ThreadTask &&tt) 
+{ 
+tt = _task-queue. front();
+_task _queue. pop();
+return true;
+}
+void ThreadWait() 
+{
+pthread _cond wait(& _cond_con, & _mutex);
+}
+void ThreadWakeUp() 
+{ 
+pthread_cond_signal(&_cond_con);
+}
+bool TaskIsEmpty() 
+{
+return _task_queue. empty();
+}
+void ThreadUnLock() 
+{
+thread_mutex_unlock(&_mutex)
+}
+void ThreadLock()
+{
+pthread_mutex_lock(&_mutex);
+}
+
+public:
+ThreadPool(int maxthr =MAX THR): thir-num(max-thr){}
+bool PoolInit() 
+{
+for (int i=0;i<thr_num; i++)
+{ 
+pthread_t tid;
+int ret =pthread_create(&tid, NULL, thr_start, (void*)this);//线程创建
+if (ret !=0)
+{
+std::cerr << "create thread error\n";
+return false;
+}
+//防止线程退出后僵尸线程，用线程分离，线程退出后自动释放资源
+pthread_detach(tid);
+}
+pthreaed_mutex_init(&_mutex, NULL);
+pthreaed_cond_init(&_cond_con, NULL);
+pthreaed cond init(& _cond_pro, NULL);
+return true;
+}
+
+bool TaskPush(ThreadTask &tt)
+{
+//加锁
+pthread_mutex_lock(&_mutex);
+//任务入队
+_task_queue.push(tt);
+pthread mutex_unlock(&_mutex);
+pthreadcond_signal(& _cond_con);
+}
