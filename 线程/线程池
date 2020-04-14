@@ -22,8 +22,8 @@ private:
 	int data;
 	TaskHandler handler;
 public:
-	ThreadTask() {}
-	ThreadTask(int data, TaskHandler handler) :_data(data),
+	ThreadTask(int data, TaskHandler handler) :
+		_data(data),
 		handler(handler) {}
 	void SetTask(int data, TaskHandler handler)
 	{
@@ -35,7 +35,7 @@ public:
 		handler(_data);
 	}
 	//每个任务都由用户自己传入数据和决定如何处理
-
+}
 #define MAX_THR 5；
 	class ThreadPool
 	{
