@@ -1,0 +1,59 @@
+udp网络编程流程实现:
+
+服务端：
+进程与网卡间产生需关联，首先创建套接字socket
+在内核中创建了一个socket结构体,通过这个结构体以及返回的文件描述符,是进程与网卡之间建立关联
+为套接字绑定地址信息
+在套接字结构体中标记地址信息,让操作系统知道发送数据的时候通过哪些地址发送,以及接收到是数据的时候,知道应该由哪一个进程来处理
+数据的接收
+数据的发送
+关闭套接字,释放资源
+
+客户端：
+int socket(int domain, int type, int protocol)
+domain:  地址域 AF_INET
+type:
+SOCK_STREAM--流式传输-可靠,有序,双向,基于连接的字节流传输
+SOCK_DGRAM--无连接,不可靠,由最大长度限制的数据传输
+protocol:传输层所使用的协议一默认为0
+IPPROTO_TCP / IPROTO_UDP
+返回值:文件描述符--套接字操作句柄
+创建完套接字，绑定地址信息
+int bind(int sockfd, struct sockaddr* addr,socklen t len);
+sockfd:  创建套接字所返回的描述符
+addr:  地址结构
+struct sockaddr_in
+{
+  uint16_t sin_family;
+  uint16_t sin_port;
+}struct in_addr sin_addr.s_addr
+
+不同地址结构怎么通过同一接口绑定
+
+发送数据，告诉操作系统要发给谁
+ssize_t sendto(int sockfd, char *data, int len, int flag, struct sockaddr* daddr, socklen_t addrlen)
+
+sockfd:套接字描述符
+data:要发送的数据
+len:要发送的数据长度
+flag:选项参数  0 -默认阻塞发送, MSG_DONTWAIT-非阻塞发送（发送不了就报错返回）
+（udp不可靠传输，不关心数据是否丢失，成功放到了socket缓冲区就判断为发送成功，所以失败条件可能有缓冲区已经没空间了）
+socket结构体中
+如果频繁发送 短小数据，频繁进行IO操作很消耗效率
+所以有有发送缓冲区，接受缓冲区（两个队列），减少IO次数
+daddr:  sockaddr_in  描述对端地址信息
+addrlen:  对端地址信息结构长度
+返回值: >0-实际发送的数据长度,  -1:错误
+
+接收数据,从socket接受缓冲区取数据
+ssize_t recvfrom(int sockfd, char *buf, int len, int flaq, struct sockaddr* saddr, socklen_t addrlen)
+
+sockfd:  套接字描述符
+buf:  从socket接收缓冲区中取出数据放到buf中
+len:  要接收的数据长度flag: 0-默认阻塞接收(缓冲区中没有数据则一致等待)
+saddr:  源端地址信息,标识这条数据是谁发的
+*addrlen:  输入输出参数-用于指定想要获取的地址信息长度-以及返回实际的地址长度
+返回值:  >0-实际接收的数据长度,  -1:错误
+
+int close(int fd)
+关闭套接字
